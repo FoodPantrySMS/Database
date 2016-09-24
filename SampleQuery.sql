@@ -1,0 +1,16 @@
+DECLARE @g geography = geography::Point(41.7246539, -87.54947449999997, 4326);                                                                                                                                        
+                                                                                                                                                                                                                  
+WITH ZipCodeData AS (                                                                                                                                                                                  
+    SELECT zc.ZipCodeID ,                                                                                                                                                                              
+    zc.GeoLocation ,                                                                                                                                                                                   
+    @g.STDistance(zc.GeoLocation) AS Dist,                                                                                                                                                             
+    (@g.STDistance(zc.GeoLocation) / 1609.344) AS Miles                                                                                                                                                
+    FROM dbo.ZipCode zc                                                                                                                                                                                
+)                                                                                                                                                                                                      
+                                                                                                                                                                                                                  
+SELECT TOP 10 fc.ProgramName, fc.ContactName, fc.LocationDescription, fc.StreetName, fc.City, fc.ZipCode, fc.Hours, zcd.Miles                                                           
+FROM ZipCodeData zcd                                                                                                                                                                                   
+INNER JOIN dbo.ServiceArea sa ON sa.ZipCode = zcd.ZipCodeID                                                                                                                                            
+INNER JOIN dbo.FoodCenter fc ON fc.FoodCenterID = sa.FoodCenterID                                                                                                                                      
+WHERE fc.IsActive = 1 AND zcd.Miles <= 5                                                                                                                                              
+ORDER BY zcd.Dist
